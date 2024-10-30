@@ -23,8 +23,8 @@ import torch.backends.cudnn as cudnn
 from yolov5.models.experimental import attempt_load
 from yolov5.utils.downloads import attempt_download
 from yolov5.models.common import DetectMultiBackend
-from yolov5.utils.datasets import LoadImages, LoadStreams, VID_FORMATS
-from yolov5.utils.general import (LOGGER, check_img_size, non_max_suppression, scale_coords,
+from yolov5.utils.dataloaders import LoadImages, LoadStreams, VID_FORMATS
+from yolov5.utils.general import (LOGGER, check_img_size, non_max_suppression, scale_boxes,
                                   check_imshow, xyxy2xywh, increment_path, strip_optimizer, colorstr)
 from yolov5.utils.torch_utils import select_device, time_sync
 from yolov5.utils.plots import Annotator, colors, save_one_box
@@ -70,7 +70,7 @@ def detect(opt):
     (save_dir / 'tracks' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
     # Load model
-    model = DetectMultiBackend(yolo_model, device=device, dnn=opt.dnn)
+    model = DetectMultiBackend(yolo_model, device=device, dnn=False)
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
@@ -169,7 +169,7 @@ def detect(opt):
 
             if det is not None and len(det):
                 # Rescale boxes from img_size to im0 size
-                det[:, :4] = scale_coords(im.shape[2:], det[:, :4], im0.shape).round()
+                det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
 
                 # Print results
                 for c in det[:, -1].unique():
@@ -262,7 +262,7 @@ if __name__ == '__main__':
     parser.add_argument('--conf-thres', type=float, default=0.5, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
-    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--show-vid', action='store_true', help='display tracking video results')
     parser.add_argument('--save-vid', action='store_true', help='save video tracking results')
     parser.add_argument('--save-txt', action='store_true', help='save MOT compliant results to *.txt')
